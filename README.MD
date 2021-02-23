@@ -7,6 +7,6 @@
 * Several things need to be considered before offloading a task; determine if the task can be offloaded effectively, which machines on the network can accept offloaded tasks, if the overhead of offloading is less than the overhead of waiting to run on the same machines.
 * The full proposal: [Proposal]
   
-[Proposal]:https://github.com/Nachiket27p/DistributedOffloading
+[Proposal]:https://github.com/Nachiket27p/DistributedOffloading/blob/master/Paper/csc724_project_proposal.pdf
 ## Implementation
 * TODO:
