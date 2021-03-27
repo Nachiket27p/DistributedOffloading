@@ -5,9 +5,8 @@ import os
 from _thread import *
 import numpy as np
 import random as rnd
-from sendReceMatrix import mat_send, mat_receive
-from sendReceMatrix import mat_send_comp, mat_receive_comp
-from sendReceMatrix import DEF_HEADER_SIZE
+from sendReceCompMatrix import mat_send, mat_receive
+from sendReceCompMatrix import DEF_HEADER_SIZE
 
 
 # create logging
@@ -15,19 +14,15 @@ logger = logging.getLogger("Main Node: " + str(os.getpid()))
 
 # set up socket for this main node
 mainSocket = socket.socket()
-# host = '192.168.1.9'
 host = '127.0.0.1'
 port = 5000
 
 ThreadCount = 0
 
-r = 500
-c = 500
-rc = r * c
-# mat_a = np.arange(rc).reshape(r, c)
-# mat_b = np.arange(rc).reshape(r, c)
-mat_a = (np.arange(rc).reshape(r, c)).astype(np.float)
-mat_b = (np.arange(rc).reshape(r, c)).astype(np.float)
+mat_a = (np.arange(10000).reshape(100, 100)).astype(np.float)
+mat_b = (np.arange(10000).reshape(100, 100)).astype(np.float)
+
+mat_c = np.matmul(mat_a, mat_b)
 
 # check if port is available
 try:
@@ -68,15 +63,13 @@ def threaded_client(connection, taskID, rows, cols):
         timePoints[2] = time.time_ns()
         timePoints[1] = timePoints[2] - timePoints[1]
 
-        # mat_send(connection, rows, logger)
-        mat_send_comp(connection, rows, logger)
+        mat_send(connection, rows, logger)
         mat_a_rec = (connection.recv(DEF_HEADER_SIZE)).decode('utf-8')
         if(mat_a_rec != rowsShapeStr):
             logger.info(mat_a_rec)
             return
 
-        # mat_send(connection, cols, logger)
-        mat_send_comp(connection, cols, logger)
+        mat_send(connection, cols, logger)
         mat_b_rec = (connection.recv(DEF_HEADER_SIZE)).decode('utf-8')
         if(mat_b_rec != colsShapeStr):
             logger.info(mat_b_rec)
@@ -88,14 +81,13 @@ def threaded_client(connection, taskID, rows, cols):
     else:
         return
 
-    # results = mat_recieve(connection, logger)
-    results = mat_receive_comp(connection, logger)
+    results = mat_recieve(connection, logger)
 
     tempTime = time.time_ns()
     timePoints[3] = tempTime - timePoints[3]
 
+    print(results == mat_c)
     # print(results)
-    print('Results received')
 
 
 # wait for workers to connect

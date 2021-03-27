@@ -5,7 +5,8 @@ import os
 from _thread import *
 import numpy as np
 import random as rnd
-from sendReceMatrix import mat_send, mat_recieve
+from sendReceMatrix import mat_send, mat_receive
+from sendReceMatrix import mat_send_comp, mat_receive_comp
 from sendReceMatrix import DEF_HEADER_SIZE
 
 
@@ -16,14 +17,19 @@ logging.debug("\n\n\n")
 
 # set up socket for this main node
 mainSocket = socket.socket()
-host = '192.168.1.9'
-# host = '127.0.0.1'
+# host = '192.168.1.9'
+host = '127.0.0.1'
 port = 5000
 
 ThreadCount = 0
 
-mat_a = np.arange(10000).reshape(100, 100)
-mat_b = np.arange(10000).reshape(100, 100)
+r = 500
+c = 500
+rc = r * c
+# mat_a = np.arange(rc).reshape(r, c)
+# mat_b = np.arange(rc).reshape(r, c)
+mat_a = (np.arange(rc).reshape(r, c)).astype(np.float)
+mat_b = (np.arange(rc).reshape(r, c)).astype(np.float)
 
 # check if port is available
 try:
@@ -59,14 +65,16 @@ def threaded_client(connection, taskID, rows, cols):
     logger.info('Task Header Expected: ' + taskHeaderConf)
 
     if(taskHeaderConf == taskHeaderResponse):
-        mat_send(connection, rows, logger)
+        # mat_send(connection, rows, logger)
+        mat_send_comp(connection, rows, logger)
         mat_a_rec = (connection.recv(DEF_HEADER_SIZE)).decode('utf-8')
         if(mat_a_rec != rowsShapeStr):
             logger.info(mat_a_rec)
             return
         logger.info("Worker Confirmed matrix a received")
 
-        mat_send(connection, cols, logger)
+        # mat_send(connection, cols, logger)
+        mat_send_comp(connection, cols, logger)
         mat_b_rec = (connection.recv(DEF_HEADER_SIZE)).decode('utf-8')
         if(mat_b_rec != colsShapeStr):
             logger.info(mat_b_rec)
@@ -77,7 +85,8 @@ def threaded_client(connection, taskID, rows, cols):
         logger.error("Task not received correctly")
         return
 
-    results = mat_recieve(connection, logger)
+    # results = mat_recieve(connection, logger)
+    results = mat_receive_comp(connection, logger)
 
     logger.info(results)
 
