@@ -40,12 +40,12 @@ mainNode.send(str.encode(taskHeaderConf))
 timePoints[1] = time.time_ns()
 timePoints[0] = timePoints[1] - timePoints[0]
 
-# mat_a = mat_recieve(mainNode, logger)
+# mat_a = mat_receive(mainNode, logger)
 mat_a = mat_receive_comp(mainNode, logger)
 mainNode.send(str.encode(str(mat_a.shape)))
 logger.info(mat_a)
 
-# mat_b = mat_recieve(mainNode, logger)
+# mat_b = mat_receive(mainNode, logger)
 mat_b = mat_receive_comp(mainNode, logger)
 mainNode.send(str.encode(str(mat_b.shape)))
 logger.info(mat_b)
