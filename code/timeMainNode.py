@@ -14,12 +14,14 @@ logger = logging.getLogger("Main Node: " + str(os.getpid()))
 
 # set up socket for this main node
 mainSocket = socket.socket()
-host = '127.0.0.1'
-port = 1234
+host = '192.168.1.9'
+# host = '127.0.0.1'
+port = 5000
+
 ThreadCount = 0
 
-mat_a = np.arange(100).reshape(10, 10)
-mat_b = np.arange(100).reshape(10, 10)
+mat_a = np.arange(10000).reshape(100, 100)
+mat_b = np.arange(10000).reshape(100, 100)
 
 # check if port is available
 try:
@@ -42,24 +44,37 @@ timePointLables = ['Time to start worker handler', 'Time for header comminicatio
 
 
 def threaded_client(connection, taskID, rows, cols):
+    rowsShapeStr = str(rows.shape)
+    colsShapeStr = str(cols.shape)
 
     timePoints[1] = time.time_ns()
     timePoints[0] = timePoints[1] - timePoints[0]
 
-    taskHeader = taskID + '|' + str(rows.shape) + '|' + str(cols.shape)
-    taskHeaderConf = taskID + '=' + str(rows.shape) + 'x' + str(cols.shape)
+    taskHeader = taskID + '|' + rowsShapeStr + '|' + colsShapeStr
+    taskHeaderConf = taskID + '=' + rowsShapeStr + 'x' + colsShapeStr
 
     connection.send(str.encode(taskHeader))
 
     taskHeaderResponse = (connection.recv(DEF_HEADER_SIZE)).decode('utf-8')
 
     if(taskHeaderConf == taskHeaderResponse):
+        # measure the time taken for header transfer
         timePoints[2] = time.time_ns()
         timePoints[1] = timePoints[2] - timePoints[1]
 
         mat_send(connection, rows, logger)
-        mat_send(connection, cols, logger)
+        mat_a_rec = (connection.recv(DEF_HEADER_SIZE)).decode('utf-8')
+        if(mat_a_rec != rowsShapeStr):
+            logger.info(mat_a_rec)
+            return
 
+        mat_send(connection, cols, logger)
+        mat_b_rec = (connection.recv(DEF_HEADER_SIZE)).decode('utf-8')
+        if(mat_b_rec != colsShapeStr):
+            logger.info(mat_b_rec)
+            return
+
+        # measure time taken to send matrices over
         timePoints[3] = time.time_ns()
         timePoints[2] = timePoints[3] - timePoints[2]
     else:
@@ -69,6 +84,8 @@ def threaded_client(connection, taskID, rows, cols):
 
     tempTime = time.time_ns()
     timePoints[3] = tempTime - timePoints[3]
+    print(results)
+    # print(results)
 
 
 # wait for workers to connect

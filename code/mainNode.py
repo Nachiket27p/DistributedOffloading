@@ -16,12 +16,14 @@ logging.debug("\n\n\n")
 
 # set up socket for this main node
 mainSocket = socket.socket()
-host = '127.0.0.1'
-port = 1234
+host = '192.168.1.9'
+# host = '127.0.0.1'
+port = 5000
+
 ThreadCount = 0
 
-mat_a = np.arange(100).reshape(10, 10)
-mat_b = np.arange(100).reshape(10, 10)
+mat_a = np.arange(10000).reshape(100, 100)
+mat_b = np.arange(10000).reshape(100, 100)
 
 # check if port is available
 try:
@@ -43,8 +45,10 @@ logger.info('Waitiing for minimum of ' + str(minWorkers) + ' workers to connect.
 
 # used to send work to worker
 def threaded_client(connection, taskID, rows, cols):
-    taskHeader = taskID + '|' + str(rows.shape) + '|' + str(cols.shape)
-    taskHeaderConf = taskID + '=' + str(rows.shape) + 'x' + str(cols.shape)
+    rowsShapeStr = str(rows.shape)
+    colsShapeStr = str(cols.shape)
+    taskHeader = taskID + '|' + rowsShapeStr + '|' + colsShapeStr
+    taskHeaderConf = taskID + '=' + rowsShapeStr + 'x' + colsShapeStr
     logger.info('Task Header Sent: ' + taskHeader)
 
     connection.send(str.encode(taskHeader))
@@ -56,7 +60,19 @@ def threaded_client(connection, taskID, rows, cols):
 
     if(taskHeaderConf == taskHeaderResponse):
         mat_send(connection, rows, logger)
+        mat_a_rec = (connection.recv(DEF_HEADER_SIZE)).decode('utf-8')
+        if(mat_a_rec != rowsShapeStr):
+            logger.info(mat_a_rec)
+            return
+        logger.info("Worker Confirmed matrix a received")
+
         mat_send(connection, cols, logger)
+        mat_b_rec = (connection.recv(DEF_HEADER_SIZE)).decode('utf-8')
+        if(mat_b_rec != colsShapeStr):
+            logger.info(mat_b_rec)
+            return
+        logger.info("Worker Confirmed matrix b received")
+
     else:
         logger.error("Task not received correctly")
         return
@@ -75,7 +91,7 @@ try:
 
         subTaskID = str(rnd.randint(0, 1024))
 
-        start_new_thread(threaded_client, (worker, subTaskID, mat_a[:10, :], mat_b[:, :10]))
+        start_new_thread(threaded_client, (worker, subTaskID, mat_a, mat_b))
 
         ThreadCount += 1
 

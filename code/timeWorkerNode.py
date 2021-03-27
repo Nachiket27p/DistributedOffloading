@@ -11,8 +11,9 @@ logger = logging.getLogger("Worker:" + str(os.getpid()))
 
 # set up socket connection to main node
 mainNode = socket.socket()
+# host = '192.168.1.9'
 host = '127.0.0.1'
-port = 1234
+port = 5000
 
 # used to log times
 timePoints = [0, 0, 0, 0]
@@ -39,7 +40,12 @@ timePoints[1] = time.time_ns()
 timePoints[0] = timePoints[1] - timePoints[0]
 
 mat_a = mat_recieve(mainNode, logger)
+mainNode.send(str.encode(str(mat_a.shape)))
+logger.info(mat_a)
+
 mat_b = mat_recieve(mainNode, logger)
+mainNode.send(str.encode(str(mat_b.shape)))
+logger.info(mat_b)
 
 timePoints[2] = time.time_ns()
 timePoints[1] = timePoints[2] - timePoints[1]

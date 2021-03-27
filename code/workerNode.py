@@ -12,8 +12,9 @@ logging.debug("\n\n\n")
 
 # set up socket connection to main node
 mainNode = socket.socket()
+# host = '192.168.1.9'
 host = '127.0.0.1'
-port = 1234
+port = 5000
 
 
 # try to establish connection to main node
@@ -41,9 +42,11 @@ try:
         mainNode.send(str.encode(taskHeaderConf))
 
         mat_a = mat_recieve(mainNode, logger)
-        mat_b = mat_recieve(mainNode, logger)
-
+        mainNode.send(str.encode(str(mat_a.shape)))
         logger.info(mat_a)
+
+        mat_b = mat_recieve(mainNode, logger)
+        mainNode.send(str.encode(str(mat_b.shape)))
         logger.info(mat_b)
 
         result = np.matmul(mat_a, mat_b)

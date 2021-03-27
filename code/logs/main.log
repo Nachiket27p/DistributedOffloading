@@ -1,0 +1,48 @@
+DEBUG:root:
+
+
+
+INFO:Main Node: 13414:Server Started ...
+INFO:Main Node: 13414:Waitiing for minimum of 4 workers to connect..
+INFO:Main Node: 13414:Connected to: 127.0.0.1:33914
+INFO:Main Node: 13414:Thread Number: 1
+INFO:Main Node: 13414:Task Header Sent: 836|(100, 100)|(100, 100)
+INFO:Main Node: 13414:Task Header Response: 836=(100, 100)x(100, 100)
+INFO:Main Node: 13414:Task Header Expected: 836=(100, 100)x(100, 100)
+DEBUG:Main Node: 13414:frame sent
+INFO:Main Node: 13414:Worker Confirmed matrix a received
+DEBUG:Main Node: 13414:frame sent
+INFO:Main Node: 13414:Worker Confirmed matrix b received
+DEBUG:Main Node: 13414:frame received
+INFO:Main Node: 13414:[[  32835000   32839950   32844900 ...   33315150   33320100   33325050]
+ [  82335000   82349950   82364900 ...   83785150   83800100   83815050]
+ [ 131835000  131859950  131884900 ...  134255150  134280100  134305050]
+ ...
+ [4834335000 4835309950 4836284900 ... 4928905150 4929880100 4930855050]
+ [4883835000 4884819950 4885804900 ... 4979375150 4980360100 4981345050]
+ [4933335000 4934329950 4935324900 ... 5029845150 5030840100 5031835050]]
+INFO:Main Node: 13414:Shutting down server ...
+DEBUG:root:
+
+
+
+INFO:Main Node: 13515:Server Started ...
+INFO:Main Node: 13515:Waitiing for minimum of 4 workers to connect..
+INFO:Main Node: 13515:Connected to: 192.168.1.11:60815
+INFO:Main Node: 13515:Thread Number: 1
+INFO:Main Node: 13515:Task Header Sent: 381|(100, 100)|(100, 100)
+INFO:Main Node: 13515:Task Header Response: 381=(100, 100)x(100, 100)
+INFO:Main Node: 13515:Task Header Expected: 381=(100, 100)x(100, 100)
+DEBUG:Main Node: 13515:frame sent
+INFO:Main Node: 13515:Worker Confirmed matrix a received
+DEBUG:Main Node: 13515:frame sent
+INFO:Main Node: 13515:Worker Confirmed matrix b received
+DEBUG:Main Node: 13515:frame received
+INFO:Main Node: 13515:[[  32835000   32839950   32844900 ...   33315150   33320100   33325050]
+ [  82335000   82349950   82364900 ...   83785150   83800100   83815050]
+ [ 131835000  131859950  131884900 ...  134255150  134280100  134305050]
+ ...
+ [4834335000 4835309950 4836284900 ... 4928905150 4929880100 4930855050]
+ [4883835000 4884819950 4885804900 ... 4979375150 4980360100 4981345050]
+ [4933335000 4934329950 4935324900 ... 5029845150 5030840100 5031835050]]
+INFO:Main Node: 13515:Shutting down server ...
