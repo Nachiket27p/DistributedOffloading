@@ -35,25 +35,35 @@
     * Outlines a more precise implementation plan, with evaluation metrics.
 * 03/26/21
   * Designed rudementary communication procedure for transmitting data between main node and worker nodes
+  * Implemented logging mechanism to track each step on both main node and worker side
+    * Logs should be present in the logs directory
+    * Tracks:
+      * sending and receiving of task info (header)
+      * sending of matrix data
+      * receiving of matrix data
+      * sending of results
+      * receivinf of results
   * Performed real world analysis on data size and time requirement for transporting data
     * The specific data collected is presented in the following spreadsheet: [Time_analysis_of_data_transfer]
   * The data analysis shows that raw encoded data transfer is too intensive on bandwidth and high transfer times
   * Utilized zfpy module to compress matrix data before sending the data
     * The compression is lossless, and ywilds ~10x compression
   * The time saved by compressing the data and sending it shows
-    * Approximately ~6x less time to transfer data
-    * Which also correlates to ~6x less bandwidth usage
+    * Bandwidth usage is reduced by ~10x
+    * Time to transfer data is reduced by ~6x
+      * This is lower than the compression savings because of additional time to compress the data is incorporated into the sending and receiving time.
   
   * Need to further analyze the findings ...
+  * 
+* 03/29/21
+  * Completed presentation for [mid-project] review
+  * Analyzed previously connected data
+
 
 ...  
 
 
-## Implementation
-* 
-
-...
-
 [proposal]:https://github.com/Nachiket27p/DistributedOffloading/blob/master/proposal/projectProposal.pdf
 [Presentation]:https://github.com/Nachiket27p/DistributedOffloading/blob/master/proposal/presentation/presentation.pptx
 [Time_analysis_of_data_transfer]:https://github.com/Nachiket27p/DistributedOffloading/blob/master/presentation/times.xlsx
+[mid-project]:https://github.com/Nachiket27p/DistributedOffloading/blob/master/presentation/midProject.pptx
