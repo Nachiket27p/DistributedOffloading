@@ -65,9 +65,6 @@
 
 [proposal]:https://github.com/Nachiket27p/DistributedOffloading/blob/master/proposal/projectProposal.pdf
 [Presentation]:https://github.com/Nachiket27p/DistributedOffloading/blob/master/proposal/presentation/presentation.pptx
-<<<<<<< HEAD
-[Time_analysis_of_data_transfer]:https://github.com/Nachiket27p/DistributedOffloading/blob/master/presentation/times.xlsx
-[mid-project]:https://github.com/Nachiket27p/DistributedOffloading/blob/master/presentation/midProject.pptx
-=======
 [Time_analysis_of_data_transfer]:https://github.com/Nachiket27p/DistributedOffloading/blob/master/proposal/presentation/times.xlsx
->>>>>>> ff2be9bb4030487b9850a1415ccd1067ca768a83
+[mid-project]:https://github.com/Nachiket27p/DistributedOffloading/blob/master/proposal/presentation/midProject.pptx
+
