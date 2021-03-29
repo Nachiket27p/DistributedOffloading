@@ -31,10 +31,20 @@
 * 03/04/21
   * Narrowed down scope to distributed matrix multipication.
 * 03/09/21
-  * Presented more refined an narrowed project. ([Presentation])
+  * Presented more refined and narrowed project. ([Presentation])
     * Outlines a more precise implementation plan, with evaluation metrics.
-
-
+* 03/26/21
+  * Designed rudementary communication procedure for transmitting data between main node and worker nodes
+  * Performed real world analysis on data size and time requirement for transporting data
+    * The specific data collected is presented in the following spreadsheet: [Time_analysis_of_data_transfer]
+  * The data analysis shows that raw encoded data transfer is too intensive on bandwidth and high transfer times
+  * Utilized zfpy module to compress matrix data before sending the data
+    * The compression is lossless, and ywilds ~10x compression
+  * The time saved by compressing the data and sending it shows
+    * Approximately ~6x less time to transfer data
+    * Which also correlates to ~6x less bandwidth usage
+  
+  * Need to further analyze the findings ...
 
 ...  
 
@@ -46,3 +56,4 @@
 
 [proposal]:https://github.com/Nachiket27p/DistributedOffloading/blob/master/proposal/projectProposal.pdf
 [Presentation]:https://github.com/Nachiket27p/DistributedOffloading/blob/master/proposal/presentation/presentation.pptx
+[Time_analysis_of_data_transfer]:https://github.com/Nachiket27p/DistributedOffloading/blob/master/presentation/times.xlsx
