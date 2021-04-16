@@ -35,6 +35,7 @@ try:
         logger.info('Waiting for task')
 
         taskHeader = mainNode.recv(DEF_HEADER_SIZE)
+        print(taskHeader)
         shape = taskHeader.decode('utf-8').split('|')
 
         taskHeaderConf = shape[0] + '=' + shape[1] + 'x' + shape[2]
@@ -51,6 +52,10 @@ try:
         mat_b = mat_receive_comp(mainNode, logger)
         mainNode.send(str.encode(str(mat_b.shape)))
         logger.info(mat_b)
+
+        confMsg = mainNode.recv(DEF_HEADER_SIZE)
+        if('start work!' != confMsg.decode('utf-8')):
+            raise KeyboardInterrupt
 
         result = np.matmul(mat_a, mat_b)
 

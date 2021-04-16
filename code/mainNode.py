@@ -2,6 +2,7 @@
 import socket
 import logging
 import os
+import time
 from _thread import *
 import numpy as np
 import random as rnd
@@ -10,6 +11,7 @@ from sendReceMatrix import mat_send_comp, mat_receive_comp
 from sendReceMatrix import DEF_HEADER_SIZE
 from workers import WorkerList
 from threading import Thread, Lock, Semaphore
+from math import sqrt
 
 # worker list
 wList = WorkerList()
@@ -59,12 +61,12 @@ logger.info('Waitiing for minimum of ' + str(minWorkers) + ' workers to connect.
 
 
 # used to send work to worker
-def threaded_client(worker, taskID, rows, cols):
-    tlgr = logging.getLogger(taskID + ':')
+def threaded_client(worker, taskID, rows, cols, subResults):
+    tlgr = logging.getLogger(str(taskID) + ':')
     rowsShapeStr = str(rows.shape)
     colsShapeStr = str(cols.shape)
-    taskHeader = taskID + '|' + rowsShapeStr + '|' + colsShapeStr
-    taskHeaderConf = taskID + '=' + rowsShapeStr + 'x' + colsShapeStr
+    taskHeader = str(taskID) + '|' + rowsShapeStr + '|' + colsShapeStr
+    taskHeaderConf = str(taskID) + '=' + rowsShapeStr + 'x' + colsShapeStr
     tlgr.info('Task Header Sent: ' + taskHeader)
 
     worker.send(str.encode(taskHeader))
@@ -90,13 +92,14 @@ def threaded_client(worker, taskID, rows, cols):
             tlgr.info(mat_b_rec)
             return
         tlgr.info('Worker Confirmed matrix b received')
-
+        worker.send(str.encode('start work!'))
     else:
         tlgr.error('Task not received correctly')
         return
 
     # results = mat_recieve(worker, tlgr)
     results = mat_receive_comp(worker, tlgr)
+    subResults[taskID[0]][taskID[1]] = results
     # log the results
     tlgr.info(results)
 
@@ -109,11 +112,6 @@ def threaded_client(worker, taskID, rows, cols):
 def workerHandler():
     wlgr = logging.getLogger('WorkerHandler:')
     while True:
-        # check if there are enough workers to offload the task
-        # if there are then signal the main thread
-        if wList.freeSize() >= SPLIT:
-            full.release()
-
         # wait for new workers to join
         worker, address = mainSocket.accept()
         wlgr.info('Connected to: ' + address[0] + ':' + str(address[1]))
@@ -128,26 +126,66 @@ def main():
 
     try:
         while True:
-            # try to acquire the semaphore to indicate
-            # enough workers have connected to the
-            full.acquire()
+            tries = 0
+            while True:
+                # waited (__timeOut * __tries) seconds with no success, then raise exception
+                if tries > 5:
+                    mainSocket.close()
+                    logger.error('Minimum number workers (' + str(SPLIT + 1) + ') not available.')
+                    exit()
+                mutex.acquire()  # acquire lock for '__wList' variable
+
+                if wList.freeSize() > SPLIT:
+                    # if there are enough workers then break out of this loop
+                    mutex.release()  # release lock for '__wList'  variable
+                    break
+                elif (wList.occupiedSize() + wList.freeSize()) > SPLIT:
+                    # if there are enough workers but they are busy then reset the tries because
+                    # the task can be distributed at some point in the future
+                    tries = 0
+
+                mutex.release()  # release lock for '__wList'  variable
+                # if there are not enough workers then sleep for a couple of seconds
+                tries += 1
+                time.sleep(2)
 
             # acquire the mutex to get access to the worker list
             mutex.acquire()
 
-            for i in range(SPLIT):
-                start = len(mat_a) // SPLIT * i
-                end = len(mat_a) // SPLIT * (i + 1)
+            # squre root of the numbers of tasks to evenly split tasks
+            SSplit = int(sqrt(SPLIT))
 
-                # get worker
-                worker = wList.getWorker()
-                # assign random id to task which will be used during communication
-                subTaskID = str(rnd.randint(0, 1024))
-                # start a worker thread
-                start_new_thread(threaded_client, (worker, subTaskID, mat_a[start:end, :], mat_b[:, start:end]))
+            subResults = [[None] * SSplit for _ in range(SSplit)]
+            wThreads = []
+
+            for i in range(SSplit):
+                # compute the start and end row for the sub task for matrix a
+                sR = (len(mat_a) // SSplit) * i
+                eR = sR + (len(mat_a) // SSplit)
+                for j in range(SSplit):
+                    # compute the start and end column for the sub task for matrix b
+                    sC = (len(mat_b[0]) // SSplit) * j
+                    eC = sC + (len(mat_b[0]) // SSplit)
+                    # get worker
+                    worker = wList.getWorker()
+                    # assign random id to task which will be used during communication
+                    subTaskID = (i, j)
+                    # start a worker thread
+                    wt = Thread(target=threaded_client, args=(worker, subTaskID, mat_a[sR:eR, :], mat_b[:, sC:eC], subResults))
+                    wt.start()
+                    wThreads.append(wt)
+                    # start_new_thread(threaded_client, (worker, subTaskID, mat_a[sR:eR, :], mat_b[:, sC:eC], subResults))
 
             # release the mutex to free the worker list
             mutex.release()
+
+            for t in wThreads:
+                t.join()
+
+            logger.info(np.bmat(subResults))
+
+            while True:
+                pass
 
     except KeyboardInterrupt:
         logger.info('Shutting down server ...')

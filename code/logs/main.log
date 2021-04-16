@@ -1,0 +1,76 @@
+DEBUG:root:
+
+
+
+INFO:Main::Server Started ...
+INFO:Main::Waitiing for minimum of 4 workers to connect..
+INFO:WorkerHandler::Connected to: 127.0.0.1:44824
+INFO:WorkerHandler::Connected to: 127.0.0.1:44826
+INFO:WorkerHandler::Connected to: 127.0.0.1:44828
+INFO:WorkerHandler::Connected to: 127.0.0.1:44830
+INFO:WorkerHandler::Connected to: 127.0.0.1:44832
+INFO:(0, 0)::Task Header Sent: (0, 0)|(4, 8)|(8, 4)
+INFO:(0, 1)::Task Header Sent: (0, 1)|(4, 8)|(8, 4)
+INFO:(1, 0)::Task Header Sent: (1, 0)|(4, 8)|(8, 4)
+INFO:(0, 0)::Task Header Response: (0, 0)=(4, 8)x(8, 4)
+INFO:(1, 1)::Task Header Sent: (1, 1)|(4, 8)|(8, 4)
+INFO:(0, 1)::Task Header Response: (0, 1)=(4, 8)x(8, 4)
+INFO:(0, 0)::Task Header Expected: (0, 0)=(4, 8)x(8, 4)
+INFO:(1, 0)::Task Header Response: (1, 0)=(4, 8)x(8, 4)
+INFO:(0, 1)::Task Header Expected: (0, 1)=(4, 8)x(8, 4)
+INFO:(1, 1)::Task Header Response: (1, 1)=(4, 8)x(8, 4)
+INFO:(0, 0)::Bytes: 256 ---> 57
+INFO:(1, 0)::Task Header Expected: (1, 0)=(4, 8)x(8, 4)
+INFO:(0, 1)::Bytes: 256 ---> 57
+INFO:(1, 1)::Task Header Expected: (1, 1)=(4, 8)x(8, 4)
+DEBUG:(0, 0)::frame sent
+INFO:(1, 0)::Bytes: 256 ---> 57
+DEBUG:(0, 1)::frame sent
+INFO:(1, 1)::Bytes: 256 ---> 57
+INFO:(0, 0)::Worker Confirmed matrix a received
+INFO:(0, 1)::Worker Confirmed matrix a received
+DEBUG:(1, 0)::frame sent
+INFO:(0, 0)::Bytes: 256 ---> 57
+DEBUG:(1, 1)::frame sent
+INFO:(0, 1)::Bytes: 256 ---> 57
+INFO:(1, 0)::Worker Confirmed matrix a received
+DEBUG:(0, 0)::frame sent
+INFO:(1, 1)::Worker Confirmed matrix a received
+DEBUG:(0, 1)::frame sent
+INFO:(1, 0)::Bytes: 256 ---> 57
+INFO:(0, 0)::Worker Confirmed matrix b received
+INFO:(1, 1)::Bytes: 256 ---> 57
+INFO:(0, 1)::Worker Confirmed matrix b received
+DEBUG:(1, 0)::frame sent
+DEBUG:(1, 1)::frame sent
+INFO:(1, 0)::Worker Confirmed matrix b received
+INFO:(1, 1)::Worker Confirmed matrix b received
+DEBUG:(0, 0)::frame received
+INFO:(0, 0)::[[1120. 1148. 1176. 1204.]
+ [2912. 3004. 3096. 3188.]
+ [4704. 4860. 5016. 5172.]
+ [6496. 6716. 6936. 7156.]]
+DEBUG:(0, 1)::frame received
+DEBUG:(1, 1)::frame received
+INFO:(0, 1)::[[1232. 1260. 1288. 1316.]
+ [3280. 3372. 3464. 3556.]
+ [5328. 5484. 5640. 5796.]
+ [7376. 7596. 7816. 8036.]]
+INFO:(1, 1)::[[ 9424.  9708.  9992. 10276.]
+ [11472. 11820. 12168. 12516.]
+ [13520. 13932. 14344. 14756.]
+ [15568. 16044. 16520. 16996.]]
+DEBUG:(1, 0)::frame received
+INFO:(1, 0)::[[ 8288.  8572.  8856.  9140.]
+ [10080. 10428. 10776. 11124.]
+ [11872. 12284. 12696. 13108.]
+ [13664. 14140. 14616. 15092.]]
+INFO:Main::[[ 1120.  1148.  1176.  1204.  1232.  1260.  1288.  1316.]
+ [ 2912.  3004.  3096.  3188.  3280.  3372.  3464.  3556.]
+ [ 4704.  4860.  5016.  5172.  5328.  5484.  5640.  5796.]
+ [ 6496.  6716.  6936.  7156.  7376.  7596.  7816.  8036.]
+ [ 8288.  8572.  8856.  9140.  9424.  9708.  9992. 10276.]
+ [10080. 10428. 10776. 11124. 11472. 11820. 12168. 12516.]
+ [11872. 12284. 12696. 13108. 13520. 13932. 14344. 14756.]
+ [13664. 14140. 14616. 15092. 15568. 16044. 16520. 16996.]]
+INFO:Main::Shutting down server ...
