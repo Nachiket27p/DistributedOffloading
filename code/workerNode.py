@@ -12,30 +12,48 @@ logger = logging.getLogger("Worker:" + str(os.getpid()))
 logging.debug("\n\n\n")
 
 # set up socket connection to main node
-mainNode = socket.socket()
+mainSocket = socket.socket()
 # host = '192.168.1.9'
-host = '127.0.0.1'
-port = 5000
+ip = '127.0.0.1'
+portI = 5000
+portW = None
 
 
 # try to establish connection to main node
 logger.info('Requesting connection to main node.')
 try:
-    mainNode.connect((host, port))
-    logger.info("Established connection to main node.")
+    mainSocket.connect((ip, portI))
+    msg = mainSocket.recv(DEF_HEADER_SIZE)
+    portW = int(msg.decode('utf-8'))
+    logger.info('Established connection to main node @ ' + ip + ':' + str(portW))
 except socket.error as e:
     logger.error(str(e))
-    mainNode.close()
+    mainSocket.close()
     exit()
+
+# close the initial connection
+mainSocket.close()
+# wait for work from main node
+mainSocket = socket.socket()
+try:
+    mainSocket.bind((ip, portW))
+except socket.error as e:
+    mainSocket.close()
+    logger.info("Failed to bind (ip, port) to socket.")
+    exit()
+
+# define the number of request waiting in queue before rejecting connection request
+maxConQ = 3
+mainSocket.listen(maxConQ)
 
 # wait for workers to connect
 try:
     # if no exception was thrown then wait for work
     while True:
         logger.info('Waiting for task')
+        mainNode, address = mainSocket.accept()
 
         taskHeader = mainNode.recv(DEF_HEADER_SIZE)
-        print(taskHeader)
         shape = taskHeader.decode('utf-8').split('|')
 
         taskHeaderConf = shape[0] + '=' + shape[1] + 'x' + shape[2]
@@ -64,7 +82,11 @@ try:
         # mat_send(mainNode, result, logger)
         mat_send_comp(mainNode, result, logger)
 
+        # close the connection after completing task
+        mainNode.close()
+
 except KeyboardInterrupt:
     logger.info("Shutting down worker ...")
 
-mainNode.close()
+# close the listening socket
+mainSocket.close()

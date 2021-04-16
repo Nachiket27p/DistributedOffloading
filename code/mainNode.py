@@ -30,7 +30,8 @@ SPLIT = 4
 mainSocket = socket.socket()
 # host = '192.168.1.9'
 host = '127.0.0.1'
-port = 5000
+portI = 5000
+portW = 5001
 
 ThreadCount = 0
 
@@ -44,7 +45,7 @@ mat_b = (np.arange(rc).reshape(r, c)).astype(np.float)
 
 # check if port is available
 try:
-    mainSocket.bind((host, port))
+    mainSocket.bind((host, portI))
 except socket.error as e:
     logger.error(str(e))
 
@@ -61,8 +62,20 @@ logger.info('Waitiing for minimum of ' + str(minWorkers) + ' workers to connect.
 
 
 # used to send work to worker
-def threaded_client(worker, taskID, rows, cols, subResults):
+def threaded_client(workerID, taskID, rows, cols, subResults):
+    # initialize logger for this thread
     tlgr = logging.getLogger(str(taskID) + ':')
+    # connect to worker node
+    worker = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+    # try to establish connection to worker
+    try:
+        worker.connect(workerID)
+    except socket.error as e:
+        worker.close()
+        tlgr.error('connection to ' + str(workerID) + ' failed with: ' + str(e))
+        exit()
+
     rowsShapeStr = str(rows.shape)
     colsShapeStr = str(cols.shape)
     taskHeader = str(taskID) + '|' + rowsShapeStr + '|' + colsShapeStr
@@ -105,7 +118,7 @@ def threaded_client(worker, taskID, rows, cols, subResults):
 
     # place the worker back into the free set of the worker list
     mutex.acquire()
-    wList.freeWorker(worker)
+    wList.freeWorker(workerID)
     mutex.release()
 
 
@@ -115,9 +128,11 @@ def workerHandler():
         # wait for new workers to join
         worker, address = mainSocket.accept()
         wlgr.info('Connected to: ' + address[0] + ':' + str(address[1]))
+        worker.send(str.encode(str(address[1])))
         mutex.acquire()
-        wList.addWorker(worker)
+        wList.addWorker(address)
         mutex.release()
+        worker.close()
 
 
 def main():
