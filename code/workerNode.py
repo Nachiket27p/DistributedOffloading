@@ -15,7 +15,7 @@ logging.debug("\n\n\n")
 mainSocket = socket.socket()
 # host = '192.168.1.9'
 ip = '127.0.0.1'
-portI = 5000
+portI = 5003
 portW = None
 
 
