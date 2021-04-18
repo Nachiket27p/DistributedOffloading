@@ -1,8 +1,0 @@
-DEBUG:root:
-
-
-
-INFO:Worker:44225:Requesting connection to main node.
-INFO:Worker:44225:Established connection to main node @ 127.0.0.1:33506
-INFO:Worker:44225:Waiting for task
-INFO:Worker:44225:Shutting down worker ...

@@ -54,11 +54,12 @@ try:
         taskHeaderConf = shape[0] + '=' + shape[1] + 'x' + shape[2]
 
         mainNode.send(str.encode(taskHeaderConf))
-
         mat_a = recv_mm(mainNode)
+        sleep(2)
         mainNode.send(str.encode(str(mat_a.shape)))
 
         mat_b = recv_mm(mainNode)
+        sleep(1)
         mainNode.send(str.encode(str(mat_b.shape)))
 
         sendResConf = mainNode.recv(DEF_HEADER_SIZE)

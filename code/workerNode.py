@@ -5,6 +5,7 @@ import numpy as np
 from sendReceMatrix import mat_send, mat_receive
 from sendReceMatrix import mat_send_comp, mat_receive_comp
 from sendReceMatrix import DEF_HEADER_SIZE
+from time import sleep
 
 # create logging
 logging.basicConfig(filename='logs/worker.log', level=logging.DEBUG)
@@ -15,7 +16,7 @@ logging.debug("\n\n\n")
 mainSocket = socket.socket()
 # host = '192.168.1.9'
 ip = '127.0.0.1'
-portI = 5003
+portI = 5001
 portW = None
 
 
@@ -59,6 +60,8 @@ try:
         taskHeaderConf = shape[0] + '=' + shape[1] + 'x' + shape[2]
         logger.info(taskHeaderConf)
 
+        # raise KeyboardInterrupt
+
         mainNode.send(str.encode(taskHeaderConf))
 
         # mat_a = mat_recieve(mainNode, logger)
@@ -79,6 +82,7 @@ try:
 
         logger.info(result)
 
+        raise KeyboardInterrupt
         # mat_send(mainNode, result, logger)
         mat_send_comp(mainNode, result, logger)
 

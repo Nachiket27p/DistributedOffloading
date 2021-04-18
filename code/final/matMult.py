@@ -3,6 +3,7 @@ from distributedMM import DMM
 import numpy as np
 from math import sqrt
 import time
+from time import sleep
 
 r = 128
 c = 128
@@ -15,11 +16,26 @@ print(singRes)
 
 dd = DMM(port=5000)
 
-dRes = dd.distributeWork(mat_a, mat_b)
-print(dRes)
+try:
+    dRes1 = dd.distributeWork(mat_a, mat_b)
+    print('----------------------------------------------')
+    print(dRes1)
+except Exception as e:
+    print(str(e))
+    exit()
+
+sleep(2)
+
+try:
+    dRes2 = dd.distributeWork(mat_a, mat_b)
+    print('----------------------------------------------')
+    print(dRes2)
+except Exception as e:
+    print(str(e))
+    exit()
+
 
 dd.close()
-
 
 # split = 4
 # SSplit = int(sqrt(split))
