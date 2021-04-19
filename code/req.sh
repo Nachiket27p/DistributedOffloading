@@ -1,4 +1,6 @@
 #!/bin/bash
+sudo add-apt-repository ppa:deadsnakes -y
+sudo apt update -y
 sudo apt install git -y
 sudo apt install net-tools -y
 sudo apt install python3.8 -y
