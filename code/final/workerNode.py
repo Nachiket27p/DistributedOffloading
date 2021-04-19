@@ -8,12 +8,17 @@ from transportMM import DEF_HEADER_SIZE
 
 # set up socket connection to main node
 mainSocket = socket.socket()
-ip = '127.0.0.1'
-portI = 5001
+
+# configure the main node IP and local ip
+# hip = '10.142.0.4'
+hip = '127.0.0.1'
+ip = socket.gethostbyname(socket.gethostname())
+
+portI = 5005
 portW = None
 
 try:
-    mainSocket.connect((ip, portI))
+    mainSocket.connect((hip, portI))
     msg = mainSocket.recv(DEF_HEADER_SIZE)
     portW = int(msg.decode('utf-8'))
 except socket.error as e:
@@ -21,11 +26,12 @@ except socket.error as e:
     mainSocket.close()
     exit()
 
+# close the initial connection
+mainSocket.close()
+
 # sleep for 0.1 seconds for ports to be freed
 sleep(0.1)
 
-# close the initial connection
-mainSocket.close()
 # wait for work from main node
 mainSocket = socket.socket()
 try:

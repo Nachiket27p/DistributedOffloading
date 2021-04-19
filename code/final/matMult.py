@@ -4,9 +4,15 @@ import numpy as np
 from math import sqrt
 import time
 from time import sleep
+import socket
 
-r = 512
-c = 512
+# condigure address for socket
+ip = socket.gethostbyname(socket.gethostname())
+p = 5005
+
+# define size of matrix
+r = 8000
+c = 8000
 rc = r * c
 mat_a = (np.arange(rc).reshape(r, c)).astype(np.float)
 mat_b = (np.arange(rc).reshape(r, c)).astype(np.float)
@@ -14,10 +20,10 @@ mat_b = (np.arange(rc).reshape(r, c)).astype(np.float)
 tStart = time.time_ns()
 singRes = np.matmul(mat_a, mat_b)
 tEnd = time.time_ns()
-print('Local Compute Time:', float((tEnd - tStart)) / 100000000.0)
+print('Local Compute Time:', (tEnd - tStart) / 1000000000.0)
 
 
-dd = DMM(port=5001)
+dd = DMM(hostIP=ip, port=p)
 
 # workers to connect
 sleep(5)
@@ -30,7 +36,7 @@ except Exception as e:
     exit()
 tEnd = time.time_ns()
 
-print('Distributed Compute Time:', float((tEnd - tStart)) / 100000000.0)
+print('Distributed Compute Time:', (tEnd - tStart) / 1000000000.0)
 
 print('Results Match:', np.all(singRes == dRes1))
 
