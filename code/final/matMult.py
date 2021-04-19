@@ -24,7 +24,7 @@ sleep(5)
 
 tStart = time.time_ns()
 try:
-    dRes1 = dd.distributeWork(mat_a, mat_b)
+    dRes1 = dd.matmul(mat_a, mat_b)
 except Exception as e:
     print(str(e))
     exit()
