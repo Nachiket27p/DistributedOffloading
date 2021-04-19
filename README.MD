@@ -52,12 +52,21 @@
     * Bandwidth usage is reduced by ~10x
     * Time to transfer data is reduced by ~6x
       * This is lower than the compression savings because of additional time to compress the data is incorporated into the sending and receiving time.
-  
-  * Need to further analyze the findings ...
-  * 
 * 03/29/21
   * Completed presentation for [mid-project] review
   * Analyzed previously connected data
+
+* 04/17/21
+  * Fixed the crashing which used to occur after a single distributed operation was completed
+    * This was done by modifying the communication interaction between the main node and the client
+  * Implemented multi threaded client worker handeling
+  * Modified communication such that:
+    * The worker node no longer stays connnected, instead makes an initial connection and provides info to main node and disconnects.
+    * The main node is now responsible for connecting to the worker node to instigate the task offload process
+  * Implemented a re-offloading when nodes fail
+    * Because the data pre-processed by compression before sending if tasks are re-offloaded, there can be unnecessary re-computation
+      * To address this issue a internal temporal caching mechanism was designed and implemented to prevent the need to compress data again.
+  * Need to implemente asyncio wait operations to prevent unnecessary waiting
 
 
 ...  

@@ -5,34 +5,44 @@ from math import sqrt
 import time
 from time import sleep
 
-r = 128
-c = 128
+r = 512
+c = 512
 rc = r * c
 mat_a = (np.arange(rc).reshape(r, c)).astype(np.float)
 mat_b = (np.arange(rc).reshape(r, c)).astype(np.float)
 
+tStart = time.time_ns()
 singRes = np.matmul(mat_a, mat_b)
-print(singRes)
+tEnd = time.time_ns()
+print('Local Compute Time:', float((tEnd - tStart)) / 100000000.0)
 
-dd = DMM(port=5000)
 
+dd = DMM(port=5001)
+
+# workers to connect
+sleep(5)
+
+tStart = time.time_ns()
 try:
     dRes1 = dd.distributeWork(mat_a, mat_b)
-    print('----------------------------------------------')
-    print(dRes1)
 except Exception as e:
     print(str(e))
     exit()
+tEnd = time.time_ns()
 
-sleep(2)
+print('Distributed Compute Time:', float((tEnd - tStart)) / 100000000.0)
 
-try:
-    dRes2 = dd.distributeWork(mat_a, mat_b)
-    print('----------------------------------------------')
-    print(dRes2)
-except Exception as e:
-    print(str(e))
-    exit()
+print('Results Match:', np.all(singRes == dRes1))
+
+# sleep(2)
+
+# try:
+#     dRes2 = dd.distributeWork(mat_a, mat_b)
+#     print('----------------------------------------------')
+#     print(dRes2)
+# except Exception as e:
+#     print(str(e))
+#     exit()
 
 
 dd.close()
