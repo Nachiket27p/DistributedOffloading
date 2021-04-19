@@ -10,7 +10,7 @@ from transportMM import DEF_HEADER_SIZE
 mainSocket = socket.socket()
 
 # configure teh main node IP and local IP
-hip = '10.142.0.4'
+hip = '10.142.0.2'
 ip = socket.gethostbyname(socket.gethostname())
 
 portI = 5005
