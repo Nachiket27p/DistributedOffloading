@@ -8,11 +8,12 @@ import socket
 
 # condigure address for socket
 ip = socket.gethostbyname(socket.gethostname())
+# ip = '127.0.0.1'
 p = 5005
 
 # define size of matrix
-r = 8000
-c = 8000
+r = 9000
+c = 9000
 rc = r * c
 mat_a = (np.arange(rc).reshape(r, c)).astype(np.float)
 mat_b = (np.arange(rc).reshape(r, c)).astype(np.float)
@@ -23,7 +24,7 @@ tEnd = time.time_ns()
 print('Local Compute Time:', (tEnd - tStart) / 1000000000.0)
 
 
-dd = DMM(hostIP=ip, port=p)
+dd = DMM(hostIP=ip, port=p, taskSplit=3)
 
 # workers to connect
 sleep(5)

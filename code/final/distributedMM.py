@@ -12,7 +12,7 @@ from workerList import WorkerList
 
 
 class DMM:
-    def __init__(self, hostIP='127.0.0.1', port=5000, maxListenQ=5, taskSplit=4, tries=5, sleepTime=2.0, offloadAttempts=1) -> None:
+    def __init__(self, hostIP='127.0.0.1', port=5000, maxListenQ=10, taskSplit=2, tries=5, sleepTime=2.0, offloadAttempts=1) -> None:
         """
         Construct an object capable of performing distributed matrix multiplication.
         Useses socket programming to listen for connections from worker nodes,
@@ -21,13 +21,20 @@ class DMM:
         the worker nodes.
 
         Args:
-            hostIP (str, optional): [description]. Defaults to '127.0.0.1'.
-            port (int, optional): [description]. Defaults to 5000.
-            maxListenQ (int, optional): [description]. Defaults to 5.
-            taskSplit (int, optional): [description]. Defaults to 4.
-            tries (int, optional): [description]. Defaults to 5.
-            sleepTime (float, optional): [description]. Defaults to 2.0.
-            offloadAttempts (int, optional): [description]. Defaults to 1.
+            hostIP (str, optional): The IP address of the host/main node.
+                                    Defaults to '127.0.0.1'.
+            port (int, optional): The port on which to accept worker connections.
+                                    Defaults to 5000.
+            maxListenQ (int, optional): The number of requests which can be in the queue at the same time.
+                                            Defaults to 10.
+            taskSplit (int, optional): The square root of the number of task to split into.
+                                        Defaults to 2.
+            tries (int, optional): Used to compute the max amount of wait time using the formula, tries*sleepTime.
+                                    Defaults to 5.
+            sleepTime (float, optional): The amount of time to sleep each after attempt to obtain workers for a task.
+                                            Defaults to 2.0.
+            offloadAttempts (int, optional): The number of times to re-offload a task when a worker fails.
+                                                Defaults to 1.
 
         Raises:
             Exception: If a socket cannot be opened on the specified IP:Port.
@@ -245,31 +252,39 @@ class DMM:
 
         # check enough workers are available to offload the task
         try:
-            self.__waitForWorker(self.__sleepTime, self.__tries, self.__taskSplit + 1)
+            self.__waitForWorker(self.__sleepTime, self.__tries, (self.__taskSplit * self.__taskSplit) + 1)
         except Exception as e:
             raise e
 
         # acquire the mutex to get access to the worker list
         self.__mutex.acquire()
 
-        # squre root of the numbers of tasks to evenly split tasks
-        SSplit = int(sqrt(self.__taskSplit))
+        subResults = [[None] * self.__taskSplit for _ in range(self.__taskSplit)]
 
-        subResults = [[None] * SSplit for _ in range(SSplit)]
         wThreads = []
         compDataCache = dict()
 
-        for i in range(SSplit):
+        for i in range(self.__taskSplit):
             # compute the start and end row for the sub task for matrix a
-            sR = (len(mat_a) // SSplit) * i
-            eR = sR + (len(mat_a) // SSplit)
-            for j in range(SSplit):
+            sR = (mat_a.shape[0] // self.__taskSplit) * i
+            # if this is the one of the corner/end segments
+            # make the end index -1 to indicate the last one
+            eR = sR + (mat_a.shape[0] // self.__taskSplit)
+            if (i == (self.__taskSplit - 1)):
+                eR = mat_a.shape[0]
+
+            for j in range(self.__taskSplit):
                 # compute the start and end column for the sub task for matrix b
-                sC = (len(mat_b[0]) // SSplit) * j
-                eC = sC + (len(mat_b[0]) // SSplit)
+                sC = (mat_b.shape[1] // self.__taskSplit) * j
+                # if this is the one of the corner/end segments
+                # make the end index -1 to indicate the last one
+                eC = sC + (mat_b.shape[1] // self.__taskSplit)
+                if (j == (self.__taskSplit - 1)):
+                    eC = mat_b.shape[1]
 
                 # assign random id to task which will be used during communication
                 subTaskID = ((i, j), ('r', sR, eR), ('c', sC, eC))
+
                 # get worker
                 worker = self.__wList.getWorker()
                 # start a worker thread
