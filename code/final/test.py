@@ -8,7 +8,7 @@ from distributedMM import DMM
 # condigure address for socket
 ip = socket.gethostbyname(socket.gethostname())
 # ip = '127.0.0.1'
-p = 5001
+p = 5005
 
 # object to access the distributed offloading mechanism
 dd = DMM(hostIP=ip, port=p, taskSplit=4)
@@ -17,8 +17,8 @@ dd = DMM(hostIP=ip, port=p, taskSplit=4)
 def testCorrectness():
     print('\nTesting correctness of the result obtained from distributed matrix multiplication.\n')
     # define size of matrix
-    r = 40
-    c = 50
+    r = 8
+    c = 8
     rc = r * c
 
     # create two matrices of of the given dimension
@@ -53,8 +53,8 @@ def testCorrectness():
 def testComputeTimeAdvantage():
     print('\nTesting compute time advantage of distributed matrix multiplication.\n')
     # define size of matrix
-    r = 1000
-    c = 1000
+    r = 9000
+    c = 9000
     rc = r * c
     # create two matrices of
     # create two matrices of of the given dimension
@@ -65,8 +65,8 @@ def testComputeTimeAdvantage():
 
     tStart1 = time.time_ns()
     sRes = np.matmul(mat_a, mat_b)
-    tEnd2 = time.time_ns()
-    print('Local Compute Time:', (tEnd2 - tStart1) / 1000000000.0, 's')
+    tEnd1 = time.time_ns()
+    print('Local Compute Time:', (tEnd1 - tStart1) / 1000000000.0, 's')
 
     tStart2 = time.time_ns()
     try:
@@ -79,15 +79,15 @@ def testComputeTimeAdvantage():
 
     # report the time taken to compute multiplication through distributed method
     print('Distributed Compute Time:', (tEnd2 - tStart2) / 1000000000.0, 's')
-    print('Speed-Up:', (((tEnd2 - tStart2) / 1000000000.0) / ((tEnd2 - tStart1) / 1000000000.0)), '%')
-    print('\nResults Match:', np.all(sRes == dRes))
+    print('Speed-Up:', (((tEnd2 - tStart2) / 1000000000.0) - ((tEnd1 - tStart1) / 1000000000.0)), 's')
+    # print('\nResults Match:', np.all(sRes == dRes))
 
 
 def testNodeFailure():
     print('\nTesting the ability to handle a node failure and showing the overhead of node failure.\n')
     # define size of matrix
-    r = 800
-    c = 800
+    r = 9000
+    c = 9000
     rc = r * c
     # create two matrices of
     # create two matrices of of the given dimension
@@ -119,8 +119,8 @@ def testNodeFailure():
     _ = input("\Remember to force quit an active worker!")
 
     # define size of matrix
-    r = 800
-    c = 800
+    r = 9000
+    c = 9000
     rc = r * c
     # create two matrices of
     # create two matrices of of the given dimension

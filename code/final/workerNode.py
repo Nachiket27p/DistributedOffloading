@@ -15,14 +15,14 @@ ip = socket.gethostbyname(socket.gethostname())
 # hip = '127.0.0.1'
 # ip = '127.0.0.1'
 
-portI = 5001
+portI = 5005
 portW = None
 
 try:
     mainSocket.connect((hip, portI))
     msg = mainSocket.recv(DEF_HEADER_SIZE)
     portW = int(msg.decode('utf-8'))
-    sleep(0.5)
+    print('Connected')
 except socket.error as e:
     print(e)
     mainSocket.close()
@@ -31,8 +31,8 @@ except socket.error as e:
 # close the initial connection
 mainSocket.close()
 
-# # sleep for 0.1 seconds for ports to be freed
-# sleep(0.1)
+# sleep for 0.1 seconds for ports to be freed
+sleep(0.1)
 
 # wait for work from main node
 mainSocket = socket.socket()
