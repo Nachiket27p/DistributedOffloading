@@ -15,7 +15,7 @@ ip = socket.gethostbyname(socket.gethostname())
 # hip = '127.0.0.1'
 # ip = '127.0.0.1'
 
-portI = 5001
+portI = 5005
 portW = None
 
 try:
@@ -57,10 +57,22 @@ try:
         # receive the task header
         # can be used to determine if something can be
         # not strictly necessary, can be removed
-        taskHeader = mainNode.recv(DEF_HEADER_SIZE)
-        shape = taskHeader.decode('utf-8').split('|')
-        taskHeaderConf = shape[0] + '=' + shape[1] + 'x' + shape[2]
+        rawTaskHeader = mainNode.recv(DEF_HEADER_SIZE)
+        taskHeader = rawTaskHeader.decode('utf-8')
+        print('Got work to do! :', taskHeader)
+
+        # decode the task header
+        task = taskHeader.split('|')
+        taskHeaderConf = task[0] + '=' + task[1] + 'x' + task[2]
+
+        # send confirmation
         mainNode.send(str.encode(taskHeaderConf))
+
+        # determine if the main node provided a tolerance level
+        if task[3] == 'None':
+            atol = None
+        else:
+            atol = float(atol)
 
         # receive first matrix
         mat_a = recv_mm(mainNode)

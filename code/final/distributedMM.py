@@ -12,7 +12,7 @@ from workerList import WorkerList
 
 
 class DMM:
-    def __init__(self, hostIP='127.0.0.1', port=5000, maxListenQ=10, taskSplit=2, tries=5, sleepTime=2.0, offloadAttempts=1) -> None:
+    def __init__(self, hostIP='127.0.0.1', port=5000, maxListenQ=10, taskSplit=4, tries=10, sleepTime=2.0, offloadAttempts=1, spareWorkers=1) -> None:
         """
         Construct an object capable of performing distributed matrix multiplication.
         Useses socket programming to listen for connections from worker nodes,
@@ -35,6 +35,8 @@ class DMM:
                                             Defaults to 2.0.
             offloadAttempts (int, optional): The number of times to re-offload a task when a worker fails.
                                                 Defaults to 1.
+            spareWorkers (int, optional): Number of spare workers to in addition to the required amount to distribute the task.
+                                            Defaults to 1.
 
         Raises:
             Exception: If a socket cannot be opened on the specified IP:Port.
@@ -47,6 +49,7 @@ class DMM:
         self.__tries = tries
         self.__sleepTime = sleepTime
         self.__offloadAttempts = offloadAttempts
+        self.__spareWorkers = spareWorkers
 
         try:
             self.__mainSocket.bind((self.__hostIP, self.__port))
@@ -71,7 +74,7 @@ class DMM:
         """
         self.__mainSocket.close()
 
-    def __threaded_client(self, workerID, taskID, rows, cols, subResults, compDataCache, offloadAttempt=0):
+    def __threaded_client(self, workerID, taskID, rows, cols, subResults, compDataCache, offloadAttempt=0, atol=None):
         """
         Private function which is executed with independent threads for each worker.
         This function can is recursively called in the event of a worker node failure.
@@ -103,7 +106,7 @@ class DMM:
 
             rowsShapeStr = str(rows.shape)
             colsShapeStr = str(cols.shape)
-            taskHeader = str(taskID) + '|' + rowsShapeStr + '|' + colsShapeStr
+            taskHeader = str(taskID) + '|' + rowsShapeStr + '|' + colsShapeStr + '|' + str(atol)
             taskHeaderConf = str(taskID) + '=' + rowsShapeStr + 'x' + colsShapeStr
 
             worker.send(str.encode(taskHeader))
@@ -117,7 +120,7 @@ class DMM:
                 raise ValueError('Task not received correctly')
 
             # send the first part of matrix
-            send_mm(worker, rows, compDataCache, taskID[1])
+            send_mm(worker, rows, atol, compDataCache, taskID[1])
            # check if the connection is still alive
             matARecRaw = worker.recv(DEF_HEADER_SIZE)
             # check if the connection is still alive
@@ -129,7 +132,7 @@ class DMM:
                 raise ValueError('Matrix A = ' + matARec)
 
             # send the second part of matrix
-            send_mm(worker, cols, compDataCache, taskID[2])
+            send_mm(worker, cols, atol, compDataCache, taskID[2])
             # check if the connection is still alive
             matBRecRaw = worker.recv(DEF_HEADER_SIZE)
             # check if the connection is still alive
@@ -176,6 +179,7 @@ class DMM:
         while True:
             # wait for new workers to join
             worker, address = self.__mainSocket.accept()
+            print('Worker', address, 'connected')
             # send the port back to the worker on which the connection will be made
             worker.send(str.encode(str(address[1])))
             # when a worker add the worker to '__wList'
@@ -185,7 +189,7 @@ class DMM:
             # close the initial connection
             worker.close()
 
-    def __waitForWorker(self, sleepTime, numTries, reqWorkers):
+    def __waitForWorker(self, sleepTime, numTries, reqWorkers, spareWorkers=0):
         """
         A private which is used to make a request to obtain a spcific number of workers.
         The request procedure uses a mutex variable to protect the shared worker list.
@@ -197,6 +201,8 @@ class DMM:
             sleepTime (flot): The amount of time to sleep
             numTries (int): Number of times to try and get the requested workers
             reqWorkers (int): Number of workers being requested
+            spareWorkers (int): Number of spare workers to keep, can be used to mitigate the overhead of node failures.
+                                Defaults to 0.
 
         Raises:
             Exception: If enough workers cannot be obtained within the given constraints
@@ -207,14 +213,16 @@ class DMM:
             # waited (__timeOut * __tries) seconds with no success, then raise exception
             if tries > numTries:
                 self.__mainSocket.close()
-                raise Exception('Minimum number workers (' + str(self.__taskSplit + 1) + ') not available.')
-            self.__mutex.acquire()  # acquire lock for '__wList' variable
+                raise Exception('Minimum number workers (' + str(self.__taskSplit + self.__spareWorkers) + ') not available.')
 
-            if self.__wList.freeSize() >= reqWorkers:
+            # acquire lock for '__wList' variable
+            self.__mutex.acquire()
+
+            if (self.__wList.freeSize() >= (reqWorkers + spareWorkers)):
                 # if there are enough workers then break out of this loop
                 self.__mutex.release()  # release lock for '__wList'  variable
                 break
-            elif (self.__wList.occupiedSize() + self.__wList.freeSize()) > reqWorkers:
+            elif ((self.__wList.occupiedSize() + self.__wList.freeSize()) >= (reqWorkers + spareWorkers)):
                 # if there are enough workers but they are busy then reset the tries because
                 # the task can be distributed at some point in the future
                 tries = 0
@@ -224,7 +232,7 @@ class DMM:
             tries += 1
             time.sleep(sleepTime)
 
-    def matmul(self, mat_a, mat_b):
+    def matmul(self, mat_a, mat_b, atol=None):
         """
         This method can be called to distribute the multiplication of the two matrices provided.
         The two matrices have to be numpy arrays, for this operation to work. This operation
@@ -252,34 +260,35 @@ class DMM:
 
         # check enough workers are available to offload the task
         try:
-            self.__waitForWorker(self.__sleepTime, self.__tries, (self.__taskSplit * self.__taskSplit) + 1)
+            self.__waitForWorker(self.__sleepTime, self.__tries, self.__taskSplit, self.__spareWorkers)
         except Exception as e:
             raise e
 
         # acquire the mutex to get access to the worker list
         self.__mutex.acquire()
 
-        subResults = [[None] * self.__taskSplit for _ in range(self.__taskSplit)]
+        sqrtTaskSplit = int(sqrt(self.__taskSplit))
+        subResults = [[None] * sqrtTaskSplit for _ in range(sqrtTaskSplit)]
 
         wThreads = []
         compDataCache = dict()
 
-        for i in range(self.__taskSplit):
+        for i in range(sqrtTaskSplit):
             # compute the start and end row for the sub task for matrix a
-            sR = (mat_a.shape[0] // self.__taskSplit) * i
+            sR = (mat_a.shape[0] // sqrtTaskSplit) * i
             # if this is the one of the corner/end segments
             # make the end index -1 to indicate the last one
-            eR = sR + (mat_a.shape[0] // self.__taskSplit)
-            if (i == (self.__taskSplit - 1)):
+            eR = sR + (mat_a.shape[0] // sqrtTaskSplit)
+            if (i == (sqrtTaskSplit - 1)):
                 eR = mat_a.shape[0]
 
-            for j in range(self.__taskSplit):
+            for j in range(sqrtTaskSplit):
                 # compute the start and end column for the sub task for matrix b
-                sC = (mat_b.shape[1] // self.__taskSplit) * j
+                sC = (mat_b.shape[1] // sqrtTaskSplit) * j
                 # if this is the one of the corner/end segments
                 # make the end index -1 to indicate the last one
-                eC = sC + (mat_b.shape[1] // self.__taskSplit)
-                if (j == (self.__taskSplit - 1)):
+                eC = sC + (mat_b.shape[1] // sqrtTaskSplit)
+                if (j == (sqrtTaskSplit - 1)):
                     eC = mat_b.shape[1]
 
                 # assign random id to task which will be used during communication
@@ -288,7 +297,7 @@ class DMM:
                 # get worker
                 worker = self.__wList.getWorker()
                 # start a worker thread
-                wt = Thread(name=str(subTaskID), target=self.__threaded_client, args=(worker, subTaskID, mat_a[sR:eR, :], mat_b[:, sC:eC], subResults, compDataCache))
+                wt = Thread(name=str(subTaskID), target=self.__threaded_client, args=(worker, subTaskID, mat_a[sR:eR, :], mat_b[:, sC:eC], subResults, compDataCache, atol))
                 wt.start()
                 wThreads.append(wt)
 

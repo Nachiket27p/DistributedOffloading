@@ -8,7 +8,7 @@ DEF_HEADER_SIZE = 128
 cacheMutex = Lock()
 
 
-def send_mm(sendSocket, frame, compDataCache=None, key=None):
+def send_mm(sendSocket, frame, atol=None, compDataCache=None, key=None):
     """USed to send numpy matrix data using zfpy compression module.
     If the main node is distributing the work matrices, then a caching
     mechanism can be used to keep track of already compressed data.
@@ -41,7 +41,10 @@ def send_mm(sendSocket, frame, compDataCache=None, key=None):
 
         # compress if the key could not be found initially
         if needToCompress:
-            compFrame = zfpy.compress_numpy(frame)
+            if atol == None:
+                compFrame = zfpy.compress_numpy(frame)
+            else:
+                compFrame = zfpy.compress_numpy(frame, atol=atol)
             # protect cache data structure
             cacheMutex.acquire()
             compDataCache[key] = compFrame
@@ -51,7 +54,10 @@ def send_mm(sendSocket, frame, compDataCache=None, key=None):
         data = struct.pack('>I', len(compDataCache[key])) + compDataCache[key]
         cacheMutex.release()
     else:
-        compFrame = zfpy.compress_numpy(frame)
+        if atol == None:
+            compFrame = zfpy.compress_numpy(frame)
+        else:
+            compFrame = zfpy.compress_numpy(frame, atol=atol)
         data = struct.pack('>I', len(compFrame)) + compFrame
 
     # try to send all the data packet constructed
