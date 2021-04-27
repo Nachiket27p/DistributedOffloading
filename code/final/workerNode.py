@@ -22,7 +22,7 @@ try:
     mainSocket.connect((hip, portI))
     msg = mainSocket.recv(DEF_HEADER_SIZE)
     portW = int(msg.decode('utf-8'))
-    sleep(0.1)
+    sleep(0.5)
 except socket.error as e:
     print(e)
     mainSocket.close()
