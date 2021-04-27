@@ -113,11 +113,11 @@ class DMM:
 
             taskHeaderResponseRaw = worker.recv(DEF_HEADER_SIZE)
             if(taskHeaderResponseRaw == None):
-                raise ConnectionAbortedError('worker failed @ task header response')
+                raise Exception('worker failed @ task header response')
 
             taskHeaderResponse = taskHeaderResponseRaw.decode('utf-8')
             if(taskHeaderConf != taskHeaderResponse):
-                raise ValueError('Task not received correctly')
+                raise Exception('Task not received correctly')
 
             # send the first part of matrix
             send_mm(worker, rows, atol, compDataCache, taskID[1])
@@ -125,11 +125,11 @@ class DMM:
             matARecRaw = worker.recv(DEF_HEADER_SIZE)
             # check if the connection is still alive
             if(matARecRaw == None):
-                raise ConnectionAbortedError('worker failed @ matrix a confirmation')
+                raise Exception('worker failed @ matrix a confirmation')
             # decode the message and check it corresponds with what was sent
             matARec = matARecRaw.decode('utf-8')
             if(matARec != rowsShapeStr):
-                raise ValueError('Matrix A = ' + matARec)
+                raise Exception('Matrix A = ' + matARec)
 
             # send the second part of matrix
             send_mm(worker, cols, atol, compDataCache, taskID[2])
@@ -137,11 +137,11 @@ class DMM:
             matBRecRaw = worker.recv(DEF_HEADER_SIZE)
             # check if the connection is still alive
             if(matBRecRaw == None):
-                raise ConnectionAbortedError('worker failed @ matrix b confirmation')
+                raise Exception('worker failed @ matrix b confirmation')
             # decode the message and check it corresponds with what was sent
             matBRec = matBRecRaw.decode('utf-8')
             if(matBRec != colsShapeStr):
-                raise ValueError('Matrix B = ' + matBRec)
+                raise Exception('Matrix B = ' + matBRec)
 
             # send message to inform worker the main node is ready to receive results
             worker.send(str.encode('start work!'))
@@ -150,7 +150,7 @@ class DMM:
             # using the taskID which indicates the row and column index
             results = recv_mm(worker)
             if(type(results) != np.ndarray):
-                raise ConnectionAbortedError("No matrix results received")
+                raise Exception("No matrix results received")
             # save the result
             subResults[taskID[0][0]][taskID[0][1]] = results
 
@@ -179,7 +179,7 @@ class DMM:
         while True:
             # wait for new workers to join
             worker, address = self.__mainSocket.accept()
-            print('Worker', address, 'connected')
+            # print('Worker', address, 'connected')
             # send the port back to the worker on which the connection will be made
             worker.send(str.encode(str(address[1])))
             # when a worker add the worker to '__wList'

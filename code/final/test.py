@@ -15,7 +15,7 @@ dd = DMM(hostIP=ip, port=p, taskSplit=4)
 
 
 def testCorrectness():
-    print('\n\nTesting correctness of the result obtained from distributed matrix multiplication.\n')
+    print('Testing correctness of the result obtained from distributed matrix multiplication.')
     # define size of matrix
     r = 8
     c = 8
@@ -25,7 +25,7 @@ def testCorrectness():
     mat_a = (np.arange(rc).reshape(r, c)).astype(np.float64)
     mat_b = (np.arange(rc).reshape(c, r)).astype(np.float64)
 
-    print('Computing multiplication of', (r, c), 'x', (c, r))
+    print('\nComputing multiplication of', (r, c), 'x', (c, r))
 
     # compute results on local machine
     sRes = np.matmul(mat_a, mat_b)
@@ -44,7 +44,7 @@ def testCorrectness():
     print('\nResults from distributed computation.')
     print(dRes)
 
-    print('Difference:')
+    print('\nDifference:')
     print(sRes - dRes)
 
     # check if the results match
@@ -52,22 +52,22 @@ def testCorrectness():
 
 
 def testComputeTimeAdvantage():
-    print('\n\nTesting compute time advantage of distributed matrix multiplication.\n')
+    print('\nTesting compute time advantage of distributed matrix multiplication.')
     # define size of matrix
-    r = 9000
-    c = 9000
+    r = 10000
+    c = 10000
     rc = r * c
     # create two matrices of
     # create two matrices of of the given dimension
     mat_a = (np.arange(rc).reshape(r, c)).astype(np.float64)
     mat_b = (np.arange(rc).reshape(c, r)).astype(np.float64)
 
-    print('Computing multiplication of', (r, c), 'x', (c, r))
+    print('\nComputing multiplication of', (r, c), 'x', (c, r))
 
     tStart1 = time.time_ns()
     sRes = np.matmul(mat_a, mat_b)
     tEnd1 = time.time_ns()
-    print('Local Compute Time:', (tEnd1 - tStart1) / 1000000000.0, 's')
+    print('\nLocal Compute Time:', (tEnd1 - tStart1) / 1000000000.0, 's')
 
     tStart2 = time.time_ns()
     try:
@@ -79,23 +79,23 @@ def testComputeTimeAdvantage():
     tEnd2 = time.time_ns()
 
     # report the time taken to compute multiplication through distributed method
-    print('Distributed Compute Time:', (tEnd2 - tStart2) / 1000000000.0, 's')
-    print('Speed-Up:', (((tEnd1 - tStart1) / 1000000000.0) - (tEnd2 - tStart2) / 1000000000.0), 's')
+    print('\nDistributed Compute Time:', (tEnd2 - tStart2) / 1000000000.0, 's')
+    print('\nSpeed-Up:', (((tEnd1 - tStart1) / 1000000000.0) - (tEnd2 - tStart2) / 1000000000.0), 's')
     # print('\nResults Match:', np.all(sRes == dRes))
 
 
 def testNodeFailure():
-    print('\n\nTesting the ability to handle a node failure and showing the overhead of node failure.\n')
+    print('Testing the ability to handle a node failure and showing the overhead of node failure.')
     # define size of matrix
-    r = 9000
-    c = 9000
+    r = 10000
+    c = 10000
     rc = r * c
     # create two matrices of
     # create two matrices of of the given dimension
     mat_a = (np.arange(rc).reshape(r, c)).astype(np.float64)
     mat_b = (np.arange(rc).reshape(c, r)).astype(np.float64)
 
-    print('Computing multiplication of', (r, c), 'x', (c, r))
+    print('\nComputing multiplication of', (r, c), 'x', (c, r))
 
     tStart1 = time.time_ns()
     sRes = np.matmul(mat_a, mat_b)
@@ -117,18 +117,9 @@ def testNodeFailure():
     print('\nResults Match:', np.all(sRes == dRes))
 
     ##############################################
-    _ = input("Remember to force quit an active worker!")
+    _ = input('\nRemember to force quit an active worker!')
 
-    # define size of matrix
-    r = 9000
-    c = 9000
-    rc = r * c
-    # create two matrices of
-    # create two matrices of of the given dimension
-    mat_a = (np.arange(rc).reshape(r, c)).astype(np.float64)
-    mat_b = (np.arange(rc).reshape(c, r)).astype(np.float64)
-
-    print('Computing multiplication of', (r, c), 'x', (c, r))
+    print('\nComputing multiplication of with intentional node failure', (r, c), 'x', (c, r))
 
     tStart2 = time.time_ns()
     sRes = np.matmul(mat_a, mat_b)
@@ -146,15 +137,13 @@ def testNodeFailure():
     # report the time taken to compute multiplication through distributed method
     print('\nDistributed Compute Time:', (tEnd2 - tStart2) / 1000000000.0, 's')
 
-    print('\nResults Match:', np.all(sRes == dRes))
-
-    print('Overhead of a single node failure:', ((tEnd2 - tStart2) / 1000000000.0) - ((tEnd1 - tStart1) / 1000000000.0), 's')
+    print('\nOverhead of a single node failure:', ((tEnd2 - tStart2) / 1000000000.0) - ((tEnd1 - tStart1) / 1000000000.0), 's')
 
 
 def main():
     try:
         while True:
-            testNumber = input("Test case number: ")
+            testNumber = input("\n\nTest case: ")
             if(testNumber == '1'):
                 testCorrectness()
             elif(testNumber == '2'):
