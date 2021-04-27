@@ -81,6 +81,8 @@ try:
         mat_b = recv_mm(mainNode)
         mainNode.send(str.encode(str(mat_b.shape)))
 
+        print('Got both matrices')
+
         # confirm the main node is ready to receive results
         # send the results to main node
         sendResConf = mainNode.recv(DEF_HEADER_SIZE)

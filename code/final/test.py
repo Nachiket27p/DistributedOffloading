@@ -15,7 +15,7 @@ dd = DMM(hostIP=ip, port=p, taskSplit=4)
 
 
 def testCorrectness():
-    print('\nTesting correctness of the result obtained from distributed matrix multiplication.\n')
+    print('\n\nTesting correctness of the result obtained from distributed matrix multiplication.\n')
     # define size of matrix
     r = 8
     c = 8
@@ -29,8 +29,6 @@ def testCorrectness():
 
     # compute results on local machine
     sRes = np.matmul(mat_a, mat_b)
-
-    print("Workers connecting...")
 
     try:
         dRes = dd.matmul(mat_a, mat_b)
@@ -46,12 +44,15 @@ def testCorrectness():
     print('\nResults from distributed computation.')
     print(dRes)
 
+    print('Difference:')
+    print(sRes - dRes)
+
     # check if the results match
     print('\nResults Match:', np.all(sRes == dRes))
 
 
 def testComputeTimeAdvantage():
-    print('\nTesting compute time advantage of distributed matrix multiplication.\n')
+    print('\n\nTesting compute time advantage of distributed matrix multiplication.\n')
     # define size of matrix
     r = 9000
     c = 9000
@@ -79,12 +80,12 @@ def testComputeTimeAdvantage():
 
     # report the time taken to compute multiplication through distributed method
     print('Distributed Compute Time:', (tEnd2 - tStart2) / 1000000000.0, 's')
-    print('Speed-Up:', (((tEnd2 - tStart2) / 1000000000.0) - ((tEnd1 - tStart1) / 1000000000.0)), 's')
+    print('Speed-Up:', (((tEnd1 - tStart1) / 1000000000.0) - (tEnd2 - tStart2) / 1000000000.0), 's')
     # print('\nResults Match:', np.all(sRes == dRes))
 
 
 def testNodeFailure():
-    print('\nTesting the ability to handle a node failure and showing the overhead of node failure.\n')
+    print('\n\nTesting the ability to handle a node failure and showing the overhead of node failure.\n')
     # define size of matrix
     r = 9000
     c = 9000
@@ -116,7 +117,7 @@ def testNodeFailure():
     print('\nResults Match:', np.all(sRes == dRes))
 
     ##############################################
-    _ = input("\Remember to force quit an active worker!")
+    _ = input("Remember to force quit an active worker!")
 
     # define size of matrix
     r = 9000
