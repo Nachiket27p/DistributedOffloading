@@ -74,7 +74,7 @@ class DMM:
         """
         self.__mainSocket.close()
 
-    def __threaded_client(self, workerID, taskID, rows, cols, subResults, compDataCache, offloadAttempt=0, atol=None):
+    def __threaded_client(self, workerID, taskID, rows, cols, subResults, compDataCache, atol=None, offloadAttempt=0):
         """
         Private function which is executed with independent threads for each worker.
         This function can is recursively called in the event of a worker node failure.
@@ -88,10 +88,10 @@ class DMM:
             rows (ndarray): The segment of the first matrix
             cols (ndarray): The segment of the second matrix
             subResults (array): An array which keeps track of the results
+            offloadAttempt (int, optional): Keeps tack of this re-offload attempt. Defaults to 0.
             compDataCache (dict): A dictionary which keeps track of the compressed data to ensure
                                     in the event of a re-offload, the data does not need to be
                                     compressed again.
-            offloadAttempt (int, optional): Keeps tack of this re-offload attempt. Defaults to 0.
 
         Raises:
             ConnectionAbortedError: Internally raied if the connection is severed
@@ -169,7 +169,7 @@ class DMM:
             self.__waitForWorker(1, 3, 1)
             # get worker
             altWorkerID = self.__wList.getWorker()
-            self.__threaded_client(altWorkerID, taskID, rows, cols, subResults, compDataCache, offloadAttempt + 1)
+            self.__threaded_client(altWorkerID, taskID, rows, cols, subResults, compDataCache, atol, offloadAttempt + 1)
 
     def __workerHandler(self):
         """
@@ -297,7 +297,7 @@ class DMM:
                 # get worker
                 worker = self.__wList.getWorker()
                 # start a worker thread
-                wt = Thread(name=str(subTaskID), target=self.__threaded_client, args=(worker, subTaskID, mat_a[sR:eR, :], mat_b[:, sC:eC], subResults, compDataCache, atol))
+                wt = Thread(name=str(subTaskID), target=self.__threaded_client, args=(worker, subTaskID, mat_a[sR:eR, :], mat_b[:, sC:eC], subResults, compDataCache, atol, 0))
                 wt.start()
                 wThreads.append(wt)
 
