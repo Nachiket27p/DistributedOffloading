@@ -10,66 +10,49 @@ import socket
 ip = socket.gethostbyname(socket.gethostname())
 # ip = '127.0.0.1'
 p = 5005
+# object to access the distributed offloading mechanism
+dd = DMM(hostIP=ip, port=p)
+# set task split size
+dd.taskSplit = 6
+
+# wait for workers to connect
+print("Waiting for workers")
+sleep(5)
+print("Starting work")
 
 # define size of matrix
-r = 9000
-c = 9000
+r = 10000
+c = 10000
 rc = r * c
-mat_a = (np.arange(rc).reshape(r, c)).astype(np.float)
-mat_b = (np.arange(rc).reshape(r, c)).astype(np.float)
+# create two matrices of
+# create two matrices of of the given dimension
+mat_a = (np.random.randint(100, size=(r, c))).astype(np.float64)
+mat_b = (np.random.randint(100, size=(c, r))).astype(np.float64)
 
-tStart = time.time_ns()
-singRes = np.matmul(mat_a, mat_b)
-tEnd = time.time_ns()
-print('Local Compute Time:', (tEnd - tStart) / 1000000000.0)
+print('Computing multiplication of', (r, c), 'x', (c, r))
 
+tStart1 = time.time_ns()
+sRes = np.matmul(mat_a, mat_b)
+tEnd1 = time.time_ns()
 
-dd = DMM(hostIP=ip, port=p, taskSplit=3)
+cTime1 = (tEnd1 - tStart1) / 1000000000.0
+print('\nLocal Compute Time:', round(cTime1, 2), 's')
 
-# workers to connect
-sleep(5)
-
-tStart = time.time_ns()
+tStart2 = time.time_ns()
 try:
-    dRes1 = dd.matmul(mat_a, mat_b)
+    dRes = dd.matmul(mat_a, mat_b)
 except Exception as e:
     print(str(e))
+    dd.close()
     exit()
-tEnd = time.time_ns()
+tEnd2 = time.time_ns()
 
-print('Distributed Compute Time:', (tEnd - tStart) / 1000000000.0)
+# report the time taken to compute multiplication through distributed method
+cTime2 = (tEnd2 - tStart2) / 1000000000.0
+print('\nDistributed Compute Time:', round(cTime2, 2), 's')
+print('\nTime saved:', round(cTime1 - cTime2, 2), 's')
 
-print('Results Match:', np.all(singRes == dRes1))
+print(np.array_equal(sRes, dRes))
 
-# sleep(2)
-
-# try:
-#     dRes2 = dd.distributeWork(mat_a, mat_b)
-#     print('----------------------------------------------')
-#     print(dRes2)
-# except Exception as e:
-#     print(str(e))
-#     exit()
-
-
+# close the distributed server
 dd.close()
-
-# split = 4
-# SSplit = int(sqrt(split))
-# # print(SSplit)
-
-# res = [[None] * SSplit for _ in range(SSplit)]
-
-# for i in range(SSplit):
-#     sR = (len(mat_a) // SSplit) * i
-#     eR = sR + (len(mat_a) // SSplit)
-#     for j in range(SSplit):
-#         sC = (len(mat_b[0]) // SSplit) * j
-#         eC = sC + (len(mat_b[0]) // SSplit)
-
-#         # print(sR, eR, sC, eC)
-#         # start a worker thread
-#         res[i][j] = np.matmul(mat_a[sR:eR, :], mat_b[:, sC:eC])
-
-# distRes = np.bmat(res)
-# print(distRes)

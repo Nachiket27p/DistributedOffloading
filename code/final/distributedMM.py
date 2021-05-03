@@ -12,7 +12,7 @@ from workerList import WorkerList
 
 
 class DMM:
-    def __init__(self, hostIP='127.0.0.1', port=5000, maxListenQ=10, taskSplit=4, tries=10, sleepTime=2.0, offloadAttempts=1, spareWorkers=1) -> None:
+    def __init__(self, hostIP='127.0.0.1', port=5000, maxListenQ=10, taskSplit=4, tries=10, sleepTime=2.0, offloadAttempts=1, spareWorkers=1, caching=True) -> None:
         """
         Construct an object capable of performing distributed matrix multiplication.
         Useses socket programming to listen for connections from worker nodes,
@@ -45,11 +45,18 @@ class DMM:
         self.__port = port
         self.__mainSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.__maxListenQ = maxListenQ
-        self.__taskSplit = taskSplit
+        # ensure the task split is always even
+        if (taskSplit < 4):
+            self.__taskSplit = 4
+        elif ((taskSplit % 2) == 1):
+            self.__taskSplit = taskSplit - 1
+        else:
+            self.__taskSplit = taskSplit
         self.__tries = tries
         self.__sleepTime = sleepTime
         self.__offloadAttempts = offloadAttempts
         self.__spareWorkers = spareWorkers
+        self.__caching = caching
 
         try:
             self.__mainSocket.bind((self.__hostIP, self.__port))
@@ -67,6 +74,75 @@ class DMM:
 
         # wait for workers to connect
         start_new_thread(self.__workerHandler, ())
+
+        # splittting map
+        self.__maxSplitMap = 16
+        self.__splitMap = {4:(2,2), 6:(3,2), 8:(4,2), 10:(3,3), 12:(4,3), 14:(4,4), 16:(4,4)}
+
+    @property
+    def hostIP(self):
+        return self.__hostIP
+
+    @property
+    def port(self):
+        return self.__port
+    
+    @property
+    def maxListenQ(self):
+        return self.__maxListenQ
+
+    @property
+    def taskSplit(self):
+        return self.__taskSplit
+    
+    @property
+    def tries(self):
+        return self.__tries
+    
+    @property
+    def sleepTime(self):
+        return self.__sleepTime
+    
+    @property
+    def offloadAttempts(self):
+        return self.__offloadAttempts
+    
+    @property
+    def spareWorkers(self):
+        return self.__spareWorkers
+    
+    @property
+    def caching(self):
+        return self.__caching
+    
+    @taskSplit.setter
+    def taskSplit(self, value):
+        if (value < 4):
+            self.__taskSplit = 4
+        elif ((value % 2) == 1):
+            self.__taskSplit = value - 1
+        else:
+            self.__taskSplit = value
+    
+    @tries.setter
+    def tries(self, value):
+        self.__tries = value
+
+    @sleepTime.setter
+    def sleepTime(self, value):
+        self.__sleepTime = value
+    
+    @spareWorkers.setter
+    def spareWorkers(self, value):
+        self.__spareWorkers = value
+
+    @offloadAttempts.setter
+    def offloadAttempts(self, value):
+        self.__offloadAttempts = value
+    
+    @caching.setter
+    def caching(self, value):
+        self.__caching = value
 
     def close(self):
         """
@@ -119,9 +195,12 @@ class DMM:
             if(taskHeaderConf != taskHeaderResponse):
                 raise Exception('Task not received correctly')
 
-            # send the first part of matrix
-            send_mm(worker, rows, atol, compDataCache, taskID[1])
-           # check if the connection is still alive
+            # send the first part of matrix, also considering if the caching mechanism is enabled
+            if (self.__caching):
+                send_mm(worker, rows, atol, compDataCache, taskID[1])
+            else:
+                send_mm(worker, rows, atol, compDataCache, None)
+            # check if the connection is still alive
             matARecRaw = worker.recv(DEF_HEADER_SIZE)
             # check if the connection is still alive
             if(matARecRaw == None):
@@ -131,8 +210,11 @@ class DMM:
             if(matARec != rowsShapeStr):
                 raise Exception('Matrix A = ' + matARec)
 
-            # send the second part of matrix
-            send_mm(worker, cols, atol, compDataCache, taskID[2])
+            # send the second part of matrix, also considering if the caching mechanism is enabled
+            if (self.__caching):
+                send_mm(worker, cols, atol, compDataCache, taskID[2])
+            else:
+                send_mm(worker, cols, atol, compDataCache, None)
             # check if the connection is still alive
             matBRecRaw = worker.recv(DEF_HEADER_SIZE)
             # check if the connection is still alive
@@ -267,28 +349,44 @@ class DMM:
         # acquire the mutex to get access to the worker list
         self.__mutex.acquire()
 
-        sqrtTaskSplit = int(sqrt(self.__taskSplit))
-        subResults = [[None] * sqrtTaskSplit for _ in range(sqrtTaskSplit)]
+        rSplit = cSplit = None
+        # if the task split specified is greater than 16 then always find the square root
+        # to determine the task split amount
+        if (self.__taskSplit > self.__maxSplitMap):
+            rSplit = cSplit = int(sqrt(self.__taskSplit))
+        else:
+            # get the task split for the split specified from the map
+            tSplit = self.__splitMap[self.__taskSplit]
+            # if the number of rows is greater than the columns
+            # then row wise with larger split value (first of the tuple returned from map)
+            if mat_a.shape[0] > mat_a.shape[1]:
+                rSplit = tSplit[0]
+                cSplit = tSplit[1]
+            else:
+                rSplit = tSplit[1]
+                cSplit = tSplit[0]
+            
+        subResults = [[None] * cSplit for _ in range(rSplit)]
 
         wThreads = []
         compDataCache = dict()
 
-        for i in range(sqrtTaskSplit):
+        for i in range(rSplit):
             # compute the start and end row for the sub task for matrix a
-            sR = (mat_a.shape[0] // sqrtTaskSplit) * i
+            sR = (mat_a.shape[0] // rSplit) * i
             # if this is the one of the corner/end segments
             # make the end index -1 to indicate the last one
-            eR = sR + (mat_a.shape[0] // sqrtTaskSplit)
-            if (i == (sqrtTaskSplit - 1)):
+            eR = sR + (mat_a.shape[0] // rSplit)
+            if (i == (rSplit - 1)):
                 eR = mat_a.shape[0]
 
-            for j in range(sqrtTaskSplit):
+            for j in range(cSplit):
                 # compute the start and end column for the sub task for matrix b
-                sC = (mat_b.shape[1] // sqrtTaskSplit) * j
+                sC = (mat_b.shape[1] // cSplit) * j
                 # if this is the one of the corner/end segments
                 # make the end index -1 to indicate the last one
-                eC = sC + (mat_b.shape[1] // sqrtTaskSplit)
-                if (j == (sqrtTaskSplit - 1)):
+                eC = sC + (mat_b.shape[1] // cSplit)
+                if (j == (cSplit - 1)):
                     eC = mat_b.shape[1]
 
                 # assign random id to task which will be used during communication
@@ -297,7 +395,11 @@ class DMM:
                 # get worker
                 worker = self.__wList.getWorker()
                 # start a worker thread
-                wt = Thread(name=str(subTaskID), target=self.__threaded_client, args=(worker, subTaskID, mat_a[sR:eR, :], mat_b[:, sC:eC], subResults, compDataCache, atol, 0))
+                wt = None
+                if (self.__caching):
+                    wt = Thread(name=str(subTaskID), target=self.__threaded_client, args=(worker, subTaskID, mat_a[sR:eR, :], mat_b[:, sC:eC], subResults, compDataCache, atol, 0))
+                else:
+                    wt = Thread(name=str(subTaskID), target=self.__threaded_client, args=(worker, subTaskID, mat_a[sR:eR, :], mat_b[:, sC:eC], subResults, None, atol, 0))
                 wt.start()
                 wThreads.append(wt)
 

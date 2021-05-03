@@ -77,8 +77,6 @@ try:
         mat_a = recv_mm(mainNode)
         mainNode.send(str.encode(str(mat_a.shape)))
 
-        print('Got first matrices')
-
         # receive second matrix
         mat_b = recv_mm(mainNode)
         mainNode.send(str.encode(str(mat_b.shape)))

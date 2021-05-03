@@ -32,7 +32,7 @@ def send_mm(sendSocket, frame, atol=None, compDataCache=None, key=None):
     # if the main node is sending the matrix data then
     # use the caching mechanism inplace in the event of a failed
     # worker node, data does not need to be recompressed
-    if not(compDataCache == None and key == None):
+    if ((compDataCache != None) and (key != None)):
         needToCompress = False
         cacheMutex.acquire()
         if key not in compDataCache:
@@ -104,9 +104,12 @@ def recv_mm(recieveSocket):
     Returns:
         ndarray: The uncompressed numpy array
     """
-    rawDataLen = __recv_all_mm(recieveSocket, 4)
-    if not rawDataLen:
-        return None
+    try:
+        rawDataLen = __recv_all_mm(recieveSocket, 4)
+        if not rawDataLen:
+            return None
+    except Exception as e:
+        raise e
 
     dataLen = struct.unpack('>I', rawDataLen)[0]
 

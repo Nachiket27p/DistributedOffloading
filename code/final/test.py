@@ -4,13 +4,14 @@ import time
 from time import sleep
 import socket
 from distributedMM import DMM
+from os import system
 
 # condigure address for socket
 ip = socket.gethostbyname(socket.gethostname())
 # ip = '127.0.0.1'
 p = 5005
 # object to access the distributed offloading mechanism
-dd = DMM(hostIP=ip, port=p, taskSplit=9)
+dd = DMM(hostIP=ip, port=p, taskSplit=4)
 
 
 def testCorrectness():
@@ -21,10 +22,10 @@ def testCorrectness():
     rc = r * c
 
     # create two matrices of of the given dimension
-    mat_a = (np.arange(rc).reshape(r, c)).astype(np.float64)
-    mat_b = (np.arange(rc).reshape(c, r)).astype(np.float64)
+    mat_a = (np.random.randint(100, size=(r, c))).astype(np.float64)
+    mat_b = (np.random.randint(100, size=(c, r))).astype(np.float64)
 
-    print('\nComputing multiplication of', (r, c), 'x', (c, r))
+    print('Computing multiplication of', (r, c), 'x', (c, r))
 
     # compute results on local machine
     sRes = np.matmul(mat_a, mat_b)
@@ -49,6 +50,9 @@ def testCorrectness():
     # check if the results match
     print('\nResults Match:', np.all(sRes == dRes))
 
+    # wait for input
+    _ = input()
+
 
 def testComputeTimeAdvantage():
     print('\nTesting compute time advantage of distributed matrix multiplication.')
@@ -58,10 +62,10 @@ def testComputeTimeAdvantage():
     rc = r * c
     # create two matrices of
     # create two matrices of of the given dimension
-    mat_a = (np.arange(rc).reshape(r, c)).astype(np.float64)
-    mat_b = (np.arange(rc).reshape(c, r)).astype(np.float64)
+    mat_a = (np.random.randint(100, size=(r, c))).astype(np.float64)
+    mat_b = (np.random.randint(100, size=(c, r))).astype(np.float64)
 
-    print('\nComputing multiplication of', (r, c), 'x', (c, r))
+    print('Computing multiplication of', (r, c), 'x', (c, r))
 
     tStart1 = time.time_ns()
     sRes = np.matmul(mat_a, mat_b)
@@ -82,8 +86,9 @@ def testComputeTimeAdvantage():
     # report the time taken to compute multiplication through distributed method
     cTime2 = (tEnd2 - tStart2) / 1000000000.0
     print('\nDistributed Compute Time:', round(cTime2, 2), 's')
-    print('\nSpeed-Up:', round(cTime1 - cTime2, 2), 's')
-    # print('\nResults Match:', np.all(sRes == dRes))
+    print('\nTime saved:', round(cTime1 - cTime2, 2), 's')
+    # wait for input
+    _ = input()
 
 
 def testNodeFailure():
@@ -94,8 +99,10 @@ def testNodeFailure():
     rc = r * c
     # create two matrices of
     # create two matrices of of the given dimension
-    mat_a = (np.arange(rc).reshape(r, c)).astype(np.float64)
-    mat_b = (np.arange(rc).reshape(c, r)).astype(np.float64)
+    mat_a = (np.random.randint(100, size=(r, c))).astype(np.float64)
+    mat_b = (np.random.randint(100, size=(c, r))).astype(np.float64)
+
+    print('Computing multiplication of', (r, c), 'x', (c, r))
 
     tStart1 = time.time_ns()
     try:
@@ -110,8 +117,6 @@ def testNodeFailure():
     # report the time taken to compute multiplication through distributed method
     print('\nDistributed compute time without node failure:', round(cTime1, 2), 's')
 
-    print('\nComputing multiplication of', (r, c), 'x', (c, r))
-
     tStart2 = time.time_ns()
     try:
         dRes = dd.matmul(mat_a, mat_b)
@@ -123,16 +128,22 @@ def testNodeFailure():
 
     cTime2 = (tEnd2 - tStart2) / 1000000000.0
     # report the time taken to compute multiplication through distributed method
-    print('\nDistributed Compute Time:', round(cTime2, 2), 's')
+    print('\nDistributed Compute Time with 1 node failure:', round(cTime2, 2), 's')
 
-    print('\nOverhead of a single node failure:', round(cTime2 - cTime1, 2), 's')
+    print('\nOverhead of 1 node failure:', round(cTime2 - cTime1, 2), 's')
+
+    # wait for input
+    _ = input()
 
 
 def main():
     try:
         while True:
-            print('\n\n###############################################################################\n')
-            testNumber = input("                                  Test case: ")
+            system('clear')
+            testNumber = input("\nTest case: ")
+            system('clear')
+            print('\n###############################################################################\n')
+            print('                                  Test case:', testNumber)
             print('\n###############################################################################\n')
             if(testNumber == '1'):
                 testCorrectness()
