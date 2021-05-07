@@ -81,42 +81,101 @@ class DMM:
 
     @property
     def hostIP(self):
+        """Get the host IP
+
+        Returns:
+            string: Host IP in string form
+        """
         return self.__hostIP
 
     @property
     def port(self):
+        """Get the port number on which the server will accept new workers.
+
+        Returns:
+            int: Port number
+        """
         return self.__port
     
     @property
     def maxListenQ(self):
+        """Get the maximum number of connection requests which can be queued up in terms of 
+        the number of workers trying to connect.
+
+        Returns:
+            int: Max connection requests which can be queued up.
+        """
         return self.__maxListenQ
 
     @property
     def taskSplit(self):
+        """Get the number of sub-tasks the next matmul call split the work into.
+
+        Returns:
+            int: Number of sub-tasks
+        """
         return self.__taskSplit
     
     @property
     def tries(self):
+        """Get the numbe of times the main thread will try to check if there are enough workers
+        to offload the multiplication requested by matmul.
+
+        Returns:
+            int: Number of tries.
+        """
         return self.__tries
     
     @property
     def sleepTime(self):
+        """Amount of times the connection handler thread will sleep after trying to accept
+        connection from worker nodes.
+
+        Returns:
+            float: Amount of time to sleep in seconds.
+        """
         return self.__sleepTime
     
     @property
     def offloadAttempts(self):
+        """Get the number of times a specific sub-task can fail and be re-offloaded before
+        giving up and the matmul function will throw an exception.
+
+        Returns:
+            int: Number of re-offloads of a task under worker node failure.
+        """
         return self.__offloadAttempts
     
     @property
     def spareWorkers(self):
+        """Get the number of spare workers to keep in the event of node failues.
+
+        Returns:
+            int: Number of workers not being utilized for distributed matrix multiplication
+        """
         return self.__spareWorkers
     
     @property
     def caching(self):
+        """Get the current state of the caching mechanism, if the value is Trie then
+        the system is performing caching of the compressed data which gets sent to
+        worker node. If False, then the system is not caching.
+
+        Returns:
+            Bool: True if cahcing is enabled, False if it is disabled
+        """
         return self.__caching
     
     @taskSplit.setter
     def taskSplit(self, value):
+        """Used to set the number of subtasks the requested matrix multiplication should be
+        split up into. The value provided should be 'even'. If an 'odd' value is provided
+        system will default to 'value-1'. If the value is less than 4 then the system will
+        default to 4.
+
+        Args:
+            value (int): Number of sub-tasks the matrix multiplication should be split into.
+        """
         if (value < 4):
             self.__taskSplit = 4
         elif ((value % 2) == 1):
@@ -126,22 +185,64 @@ class DMM:
     
     @tries.setter
     def tries(self, value):
-        self.__tries = value
+        """Set the number of times the matmul function call should try and obtain enough
+        workers to distribute the workload.
+
+        Args:
+            value (int): Number of times to retry and get the required workers.
+        """
+        if(value < 1):
+            self.__tries = 1
+        else:
+            self.__tries = value
 
     @sleepTime.setter
     def sleepTime(self, value):
-        self.__sleepTime = value
+        """Set the amount of time in seconds the new worker connection thread should wait
+        before re-checking for new worker connection requests.
+
+        Args:
+            value (float): Amount of time to sleep before retrying to connecto more workers
+        """
+        if(value < 1):
+            self.__sleepTime = 1.0
+        else:    
+            self.__sleepTime = value
     
     @spareWorkers.setter
     def spareWorkers(self, value):
-        self.__spareWorkers = value
+        """Set the number of spare workers to keep. If the value provided is less than 1 then
+        the value will default to 1.
+
+        Args:
+            value (int): The number of spare workers.
+        """
+        if (value < 1):
+            self.__spareWorkers = 1
+        else:    
+            self.__spareWorkers = value
 
     @offloadAttempts.setter
     def offloadAttempts(self, value):
-        self.__offloadAttempts = value
+        """Set the number of re-offload attempts under the situation where a worker node
+        fails/loses connection.
+
+        Args:
+            value (int): Number of re-offload attempts.
+        """
+        if(value < 1):
+            self.__offloadAttempts = 1
+        else:
+            self.__offloadAttempts = value
     
     @caching.setter
     def caching(self, value):
+        """USed to enable or disable caching. Accepts a boolean value to enable or disable
+        the compressed data caching mechanism.
+
+        Args:
+            value (Bool): True if you want to enable caching, False if you want to disable caching.
+        """
         self.__caching = value
 
     def close(self):

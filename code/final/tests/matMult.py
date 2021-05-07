@@ -16,8 +16,11 @@ dd = DMM(hostIP=ip, port=p)
 dd.taskSplit = 6
 
 # wait for workers to connect
-print("Waiting for workers")
-sleep(5)
+print('Waiting for workers')
+
+_ = input('Press enter to continue')
+
+
 print("Starting work")
 
 # define size of matrix
