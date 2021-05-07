@@ -1,0 +1,15 @@
+This is NOT the main readme file, it is located in dmm.zip
+This is just the info file which presents two diferent ways to view the
+    project source code.
+
+The main files for the project are located in the dmm.zip file
+
+The project can also be lodated at the following github repository:
+    https://github.com/Nachiket27p/DistributedOffloading
+    
+When on the page please navigate to the directory 'code/final/' to view a
+    detailed readme and the main files of the project.
+
+Everything in the 'code/final/' directory on the github repository is the
+    same as the contents of dmm.zip provided
+
